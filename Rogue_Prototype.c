@@ -3,32 +3,41 @@
 #include <string.h>
 #include <unistd.h>
 int ROW,COLUMN;
-void GAME_STARTUP_MENU();
-
-
-
+int IS_GUEST=0;
+char GAME_STARTUP_MENU();
+void USER_REGISTERATION();
+void HANDLE_NEXT_MENUS(char);
+void USER_LOGIN();
 
 
 
 
 int main() {
+
     initscr();
+
     noecho();
+
+    curs_set(0);
+
     keypad(stdscr,TRUE);
+
     getmaxyx(stdscr,ROW,COLUMN);
+
     if(has_colors()==TRUE) {
+        
         start_color();
+
         init_pair(1,COLOR_YELLOW,COLOR_BLACK);
+
         init_pair(2,COLOR_WHITE,COLOR_YELLOW);
+
         //add colors later
-
-
-
-
     }
 
-    GAME_STARTUP_MENU();
-    
+    char NEXT_MENU=GAME_STARTUP_MENU();
+
+    HANDLE_NEXT_MENUS(NEXT_MENU);
 
 
 
@@ -43,17 +52,19 @@ int main() {
 
     
     getch();
+
     endwin();
+
     return 0;
 }
 
-void GAME_STARTUP_MENU() {
+char GAME_STARTUP_MENU() {
 
     attron(COLOR_PAIR(1));
 
     mvprintw(ROW-1,0,"v1.0.0 Developed By Mohammad Amin Haghjoo");
 
-    mvprintw(ROW-1,COLUMN/2-12,"Press e or E to Select a Menu");
+    mvprintw(ROW-1,COLUMN/2-22,"Press e or E and arrow keys to Navigate Menus");
 
     attron(A_ITALIC);
 
@@ -86,14 +97,14 @@ void GAME_STARTUP_MENU() {
 
             clear();
 
-            break;
+            return 'p'; //play & login
 
         }
         else if((input=='e' || input=='E') && y==3*ROW/4) {
             
             clear();
 
-            break;
+            return 'r'; //register new user
 
         }
         else if(input==KEY_DOWN && y==ROW/2) {
@@ -136,9 +147,23 @@ void GAME_STARTUP_MENU() {
     }
 
     while(TRUE);
+}
+void USER_REGISTERATION() {
 
+}
+void HANDLE_NEXT_MENUS(char NEXT_MENU) {
 
+    if(NEXT_MENU=='r') {
 
+        USER_REGISTERATION();
 
+    }
+    else if (NEXT_MENU=='p') {
+    
+        USER_LOGIN();
+
+    }
+}
+void USER_LOGIN() {
 
 }
