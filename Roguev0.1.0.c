@@ -6,12 +6,12 @@
 
 
 int ROW,COLUMN;
-int IS_GUEST=0;
-char LOGGED_IN_USER[100];
+int GLOBAL_IS_GUEST=0;
+char GLOBAL_LOGGED_IN_USER[100];
 char GAME_STARTUP_MENU();
 void USER_REGISTERATION();
 void HANDLE_NEXT_MENUS(char);
-void USER_LOGIN();
+int USER_LOGIN();
 void CLEAR_TEXT_FOR_LOGIN_ERRORS();
 void RESET_CURSOR_AND_COLORS_FOR_LOGIN_ERROR();
 void GENERATE_RANDOM_PASSWORD(char[]);
@@ -176,7 +176,7 @@ void USER_REGISTERATION() {
 
     curs_set(1);
 
-    FILE * USERS=fopen("users.txt","a+");
+    FILE * USERS=fopen("passwords.txt","a+");
 
     attron(COLOR_PAIR(1));
 
@@ -259,6 +259,8 @@ void USER_REGISTERATION() {
                     break;
 
                 }
+                
+                fscanf(USERS," %s",USER_RECORDS);
 
             }
 
@@ -297,7 +299,7 @@ void USER_REGISTERATION() {
 
         getstr(PASSWORD);
 
-        if(strcmp(PASSWORD,"r")==0) {
+        if(strcmp(PASSWORD,"r")==0 || strcmp(PASSWORD,"R")==0) {
 
             CLEAR_TEXT_FOR_LOGIN_ERRORS();
 
@@ -481,7 +483,7 @@ void USER_REGISTERATION() {
         break;
     }
 
-    fprintf(USERS,"%s ",USERNAME);
+    fprintf(USERS,"%s %s\n",USERNAME,PASSWORD);
 
     //store saved game and default settings later
 
@@ -492,12 +494,6 @@ void USER_REGISTERATION() {
     fprintf(SCOREBOARD,"%s %d\n",USERNAME,0);
 
     fclose(SCOREBOARD);
-
-    FILE *STORE_PASSWORD=fopen("passwords.txt","a+");
-
-    fprintf(STORE_PASSWORD,"%s ",PASSWORD);
-
-    fclose(STORE_PASSWORD);
 
     noecho();
 
@@ -515,18 +511,158 @@ void USER_REGISTERATION() {
 
     attroff(COLOR_PAIR(1));
 
-    strcpy(LOGGED_IN_USER,USERNAME);
+    strcpy(GLOBAL_LOGGED_IN_USER,USERNAME);
 
 }
-void USER_LOGIN() {
+int USER_LOGIN() {
 
     clear();
 
+    attron(COLOR_PAIR(1));
 
+    echo();
 
+    curs_set(1);
 
+    FILE * USER_PASSWORD_LIST=fopen("passwords.txt","r+");
 
+    mvprintw(ROW/3,COLUMN/2 -37  ,"Enter Your Username. First Time ? Press r to Register or g to Play as Guest");
 
+    mvprintw(2*ROW/3+1, COLUMN/2 - 7,"###############");
+
+    move(2*ROW/3, COLUMN/2 -7);
+
+    refresh();
+
+    char USERNAME[100];
+
+    char PASSWORD[100];
+
+    char CORRECT_PASSWORD[100];
+
+    while (TRUE)  //check username
+    {
+        
+        getstr(USERNAME);
+
+        if(strcmp(USERNAME,"r")==0 || strcmp(USERNAME,"R")==0) {
+
+            USER_REGISTERATION();
+
+            return 1;
+
+        }
+
+        if(strcmp(USERNAME,"g")==0 || strcmp(USERNAME,"G")==0) {
+
+            GLOBAL_IS_GUEST=TRUE;
+
+            strcpy(GLOBAL_LOGGED_IN_USER,"Guest");
+
+            return 1;
+
+        }
+
+        int USER_EXISTS=FALSE;
+
+        char USER_FROM_FILE[20];
+
+        while(TRUE) {
+
+            if(fscanf(USER_PASSWORD_LIST," %s",USER_FROM_FILE)!=EOF) {
+
+                if(strcmp(USER_FROM_FILE,USERNAME)==0) {
+
+                    USER_EXISTS=TRUE;
+
+                    break;
+
+                }
+
+                fscanf(USER_PASSWORD_LIST," %s",USER_FROM_FILE);
+
+                continue;
+
+            }
+
+            rewind(USER_PASSWORD_LIST);
+
+            break;
+        }
+
+        if(USER_EXISTS==FALSE) {
+
+            CLEAR_TEXT_FOR_LOGIN_ERRORS();
+
+            mvprintw(ROW/3 +2,COLUMN/2 -11 ,"Username Doesn't Exist");
+
+            RESET_CURSOR_AND_COLORS_FOR_LOGIN_ERROR();
+
+            continue;
+        }
+
+        fscanf(USER_PASSWORD_LIST," %s",CORRECT_PASSWORD);
+        break;
+    }
+    
+    //password gui and forgot my password
+
+    clear();
+
+    mvprintw(ROW/3,COLUMN/2 -23,"Enter Your Password. Press f if You Forgot it.");
+
+    mvprintw(2*ROW/3+1, COLUMN/2 - 7,"###############");
+
+    move(2*ROW/3, COLUMN/2 -7);
+
+    refresh();
+
+    while(TRUE) {
+
+        getstr(PASSWORD);
+
+        if(strcmp(PASSWORD,CORRECT_PASSWORD)==0) {
+
+            break;
+
+        }
+
+        if(strcmp("f",PASSWORD)==0 || strcmp("F",PASSWORD)==0) {
+
+            mvprintw(ROW/3 +1,COLUMN/2 -18 ,"Hint : Your Password's Length is %lu.",strlen(CORRECT_PASSWORD));
+
+            CLEAR_TEXT_FOR_LOGIN_ERRORS();
+
+            RESET_CURSOR_AND_COLORS_FOR_LOGIN_ERROR();
+
+            continue;
+
+        }
+
+        CLEAR_TEXT_FOR_LOGIN_ERRORS();
+
+        mvprintw(ROW/3 +2,COLUMN/2 -7,"Wrong Password");
+
+        RESET_CURSOR_AND_COLORS_FOR_LOGIN_ERROR();
+    }
+
+    //display a welcome message and propmt to continue
+
+    CLEAR_TEXT_FOR_LOGIN_ERRORS();
+
+    RESET_CURSOR_AND_COLORS_FOR_LOGIN_ERROR();
+
+    mvprintw(ROW/3 +3,COLUMN/2 -21 ,"Login Successful. Press a Key to Continue.");
+
+    noecho();
+
+    getch();
+
+    attroff(COLOR_PAIR(1));
+
+    curs_set(0);
+
+    fclose(USER_PASSWORD_LIST);
 
 }
 void CLEAR_TEXT_FOR_LOGIN_ERRORS() {
